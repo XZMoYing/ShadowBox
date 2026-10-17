@@ -1,0 +1,20 @@
+[package]
+name = "shadowbox-tray"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+tao = "=0.37.1"
+tray-icon = "=0.26.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2.12", default-features = false, features = ["json"] }
+dirs = "6"
+fs2 = "0.4"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "s"

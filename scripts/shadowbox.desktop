@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ShadowBox
+Comment=Desktop proxy client
+Exec=shadowbox
+Icon=shadowbox
+Terminal=false
+Categories=Network;
+StartupNotify=false
+StartupWMClass=dev.shadowbox.shadowbox

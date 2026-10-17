@@ -1,0 +1,17 @@
+.DS_Store
+dist/
+native/tray/target/
+service/shadowbox-service*
+*.log
+*.sqlite*
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+service.json
+.idea/
+
+
+__pycache__/
+*.pyc

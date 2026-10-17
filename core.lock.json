@@ -1,0 +1,11 @@
+{
+  "nekobox_release": "1.4.2",
+  "sing_box_repository": "https://github.com/MatsuriDayo/sing-box",
+  "sing_box_commit": "aed32ee3066cdbc7d471e3e0415c5134088962df",
+  "sing_box_version": "1.12.19-neko-1",
+  "libneko_commit": "1c47a3af71990a7b2192e03292b4d246c308ef0b",
+  "build_tags": ["with_conntrack", "with_gvisor", "with_quic", "with_wireguard", "with_utls", "with_clash_api"],
+  "flutter": "3.47.7",
+  "go": "1.27.2",
+  "rust": "1.99.1"
+}
