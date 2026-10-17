@@ -54,8 +54,10 @@ jobs:
       # runners, install the SDK manually and swap in the matching ARM64 Dart
       # SDK published by the same engine so the toolchain runs natively (the
       # Windows action cannot resolve an arm64 version, and an x64 tool under
-      # emulation would build an x64 app). engine.stamp already matches
-      # engine-dart-sdk.stamp, so the tool will not re-download the x64 SDK.
+      # emulation would build an x64 app). The prebuilt flutter_tools snapshot
+      # is x64 too, so it is deleted to force the tool to rebuild it with the
+      # ARM64 Dart VM on first run. engine.stamp already matches
+      # engine-dart-sdk.stamp, so the SDK swap will not be re-downloaded.
       - name: Install Flutter with ARM64 Dart SDK (Linux arm64)
         if: runner.os == 'Linux' && runner.arch == 'ARM64'
         shell: bash
@@ -70,6 +72,8 @@ jobs:
             "https://storage.googleapis.com/flutter_infra_release/flutter/$engine/dart-sdk-linux-arm64.zip"
           rm -rf "$HOME/flutter/bin/cache/dart-sdk"
           unzip -q -o dart-sdk-arm64.zip -d "$HOME/flutter/bin/cache"
+          rm -f "$HOME/flutter/bin/cache/flutter_tools.snapshot" \
+                "$HOME/flutter/bin/cache/flutter_tools.stamp"
           echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
           "$HOME/flutter/bin/cache/dart-sdk/bin/dart" --version
 
@@ -88,6 +92,9 @@ jobs:
             "https://storage.googleapis.com/flutter_infra_release/flutter/$engine/dart-sdk-windows-arm64.zip"
           Remove-Item -Recurse -Force "$flutter\bin\cache\dart-sdk"
           tar.exe -xf dart-sdk-arm64.zip -C "$flutter\bin\cache"
+          Remove-Item -Force -ErrorAction SilentlyContinue `
+            "$flutter\bin\cache\flutter_tools.snapshot", `
+            "$flutter\bin\cache\flutter_tools.stamp"
           "$flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           & "$flutter\bin\cache\dart-sdk\bin\dart.exe" --version
           & "$flutter\bin\flutter.bat" --version
