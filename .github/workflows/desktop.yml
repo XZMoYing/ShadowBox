@@ -1,0 +1,76 @@
+name: Desktop builds
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.2'
+          cache-dependency-path: service/go.sum
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.1'
+          components: rustfmt, clippy
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - name: Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev liblzma-dev libstdc++-12-dev
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        if: runner.os == 'Windows'
+        with:
+          install: mingw-w64-x86_64-gcc
+          update: true
+      - name: Windows C compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '"${{ steps.msys2.outputs.msys2-location }}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+      - name: Go tests
+        working-directory: service
+        run: go test -race -tags with_conntrack,with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api ./...
+      - name: Tray checks
+        run: cargo clippy --locked --manifest-path native/tray/Cargo.toml -- -D warnings
+      - name: Interface checks
+        working-directory: apps/desktop
+        run: |
+          flutter pub get
+          dart analyze lib test
+          flutter test --no-pub
+      - name: Build desktop package
+        run: python scripts/build.py
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $compiler)) { choco install innosetup --yes --no-progress }
+          & $compiler scripts/windows.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShadowBox-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            dist/**/*.dmg
+            dist/**/*.zip
+            dist/**/*.tar.gz
+            dist/**/*.deb
+            dist/**/*Setup.exe
+            dist/**/THIRD_PARTY_NOTICES.md
+            dist/**/core.lock.json
+          if-no-files-found: error

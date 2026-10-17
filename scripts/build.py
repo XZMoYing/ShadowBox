@@ -18,7 +18,15 @@ ENV['FLUTTER_SUPPRESS_ANALYTICS'] = 'true'
 
 def run(*args, cwd=ROOT):
     print('+', ' '.join(map(str, args)), flush=True)
-    subprocess.run(list(map(str, args)), cwd=cwd, env=ENV, check=True)
+    cmd = [str(a) for a in args]
+    if os.name == 'nt':
+        # CreateProcess cannot launch .bat/.cmd wrappers (flutter) directly.
+        resolved = shutil.which(cmd[0])
+        if resolved and resolved.lower().endswith(('.bat', '.cmd')):
+            cmd = ['cmd', '/d', '/c', 'call', resolved] + cmd[1:]
+        elif resolved:
+            cmd[0] = resolved
+    subprocess.run(cmd, cwd=cwd, env=ENV, check=True)
 
 def main():
     parser = argparse.ArgumentParser()
